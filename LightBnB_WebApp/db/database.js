@@ -70,7 +70,7 @@ const addUser = function(user) {
     .then(function(result) {
       return result.rows[0];
     })
-    .catch(function (err) {
+    .catch(function(err) {
       console.log(err.message);
     });
 };
@@ -82,7 +82,7 @@ const addUser = function(user) {
  * @param {string} guest_id The id of the user.
  * @return {Promise<[{}]>} A promise to the reservations.
  */
-const getAllReservations = function(guest_id, limit = 10) {
+const getAllReservations = function(guestId, limit = 10) {
   return pool
     .query(`
       SELECT reservations.*, properties.*, AVG(property_reviews.rating) as average_rating
@@ -93,7 +93,7 @@ const getAllReservations = function(guest_id, limit = 10) {
       GROUP BY reservations.id, properties.id
       ORDER BY reservations.start_date
       LIMIT $2;
-      `, [guest_id, limit])
+      `, [guestId, limit])
     .then(function (result) {
       console.log(result.rows);
       return result.rows;
@@ -105,6 +105,14 @@ const getAllReservations = function(guest_id, limit = 10) {
 
 /// Properties
 
+// Detects position of query and adds either WHERE or AND depending
+const clausToggle = function(query) {
+  if (query.length === 1) {
+    return 'WHERE';
+  }
+  return 'AND';
+};
+
 /**
  * Get all properties.
  * @param {{}} options An object containing query options.
@@ -112,20 +120,52 @@ const getAllReservations = function(guest_id, limit = 10) {
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
-  return pool
-    .query(`
-      SELECT *
-      FROM properties
-      LIMIT $1;
-      `, [limit])
-    .then(function(result) {
-      return result.rows;
-    })
-    .catch(function(err) {
-      console.log(err.message);
-    });
-};
+  const queryParams = [];
 
+  let queryString = `
+  SELECT properties.*, avg(property_reviews.rating) as average_rating
+  FROM properties
+  JOIN property_reviews ON properties.id = property_id
+  `;
+
+  if (options.city) {
+    queryParams.push(`%${options.city}%`);
+    queryString += `${clausToggle(queryParams)} city LIKE $${queryParams.length} `;
+    console.log(queryParams.length);
+  }
+
+  if (options.owner_id) {
+    queryParams.push(options.owner_id);
+    queryString += `${clausToggle(queryParams)} owner_id = $${queryParams.length} `;
+  }
+
+  if (options.minimum_price_per_night) {
+    queryParams.push(options.minimum_price_per_night);
+    queryString += `${clausToggle(queryParams)} cost_per_night >= $${queryParams.length} `;
+  }
+
+  if (options.maximum_price_per_night) {
+    queryParams.push(options.maximum_price_per_night);
+    queryString += `${clausToggle(queryParams)} cost_per_night <= $${queryParams.length} `;
+  }
+
+  if (options.minimum_rating) {
+    queryParams.push(options.minimum_rating);
+    queryString += `${clausToggle(queryParams)} rating >= $${queryParams.length} `;
+  }
+
+  queryParams.push(limit);
+  queryString += `
+  GROUP BY properties.id
+  ORDER BY cost_per_night
+  LIMIT $${queryParams.length};
+  `;
+
+  console.log(queryString, queryParams);
+
+  return pool.query(queryString, queryParams).then((res) => res.rows);
+};
+  
 /**
  * Add a property to the database
  * @param {{}} property An object containing all of the property details.
