@@ -83,7 +83,7 @@ const getAllReservations = function(guestId, limit = 10) {
       FROM properties
       JOIN reservations ON properties.id = reservations.property_id
       JOIN property_reviews ON properties.id = property_reviews.property_id
-      WHERE reservations.guest_id = $1
+      WHERE reservations.guest_id = $1 AND end_date < now()::date
       GROUP BY reservations.id, properties.id
       ORDER BY reservations.start_date
       LIMIT $2;
@@ -124,7 +124,6 @@ const getAllProperties = function(options, limit = 10) {
   if (options.city) {
     queryParams.push(`%${options.city}%`);
     queryString += `${clausToggle(queryParams)} city LIKE $${queryParams.length} `;
-    console.log(queryParams.length);
   }
 
   if (options.owner_id) {
@@ -156,8 +155,8 @@ const getAllProperties = function(options, limit = 10) {
 
   return pool
     .query(queryString, queryParams)
-    .then(function(res) {
-      res.rows;
+    .then(function(result) {
+      return result.rows;
     })
     .catch(function(err) {
       console.log(err.message);
@@ -205,8 +204,8 @@ const addProperty = function(property) {
       property.number_of_bathrooms,
       property.number_of_bedrooms
     ])
-    .then(function(res) {
-      res.rows[0];
+    .then(function(result) {
+      return result.rows[0];
     })
     .catch(function(err) {
       console.log(err.message);
