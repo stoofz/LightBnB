@@ -23,7 +23,10 @@ const getUserWithEmail = function(email) {
       `;
   return db.query(query, [email])
     .then(function(result) {
-      return result.rows[0];
+      if (result.rows) {
+        return result.rows[0];
+      }
+      return null;
     })
     .catch(function(err) {
       console.log(err.message);
@@ -43,7 +46,10 @@ const getUserWithId = function(id) {
     `;
   return db.query(query, [id])
     .then(function(result) {
-      return result.rows[0];
+      if (result.rows) {
+        return result.rows[0];
+      }
+      return null;
     })
     .catch(function(err) {
       console.log(err.message);
@@ -100,7 +106,7 @@ const getAllReservations = function(guestId, limit = 10) {
 /// Properties
 
 // Detects position of queryParam, adds either WHERE or AND
-const clausToggle = function(query) {
+const clauseToggle = function(query) {
   if (query.length === 1) {
     return 'WHERE';
   }
@@ -124,27 +130,27 @@ const getAllProperties = function(options, limit = 10) {
 
   if (options.city) {
     queryParams.push(`%${options.city}%`);
-    query += `${clausToggle(queryParams)} city LIKE $${queryParams.length} `;
+    query += `${clauseToggle(queryParams)} city LIKE $${queryParams.length} `;
   }
 
   if (options.owner_id) {
     queryParams.push(options.owner_id);
-    query += `${clausToggle(queryParams)} owner_id = $${queryParams.length} `;
+    query += `${clauseToggle(queryParams)} owner_id = $${queryParams.length} `;
   }
 
   if (options.minimum_price_per_night) {
     queryParams.push(options.minimum_price_per_night * 100);
-    query += `${clausToggle(queryParams)} cost_per_night >= $${queryParams.length} `;
+    query += `${clauseToggle(queryParams)} cost_per_night >= $${queryParams.length} `;
   }
 
   if (options.maximum_price_per_night) {
     queryParams.push(options.maximum_price_per_night * 100);
-    query += `${clausToggle(queryParams)} cost_per_night <= $${queryParams.length} `;
+    query += `${clauseToggle(queryParams)} cost_per_night <= $${queryParams.length} `;
   }
 
   if (options.minimum_rating) {
     queryParams.push(options.minimum_rating);
-    query += `${clausToggle(queryParams)} rating >= $${queryParams.length} `;
+    query += `${clauseToggle(queryParams)} rating >= $${queryParams.length} `;
   }
 
   queryParams.push(limit);
