@@ -1,5 +1,3 @@
-const properties = require("./json/properties.json");
-const users = require("./json/users.json");
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -8,10 +6,6 @@ const pool = new Pool({
   host: 'localhost',
   database: 'lightbnb'
 });
-
-// pool.query(`SELECT title FROM properties LIMIT 10;`).then(function(response) {
-//   console.log(response);
-// });
 
 /// Users
 
@@ -43,9 +37,9 @@ const getUserWithEmail = function(email) {
 const getUserWithId = function(id) {
   return pool
     .query(`
-    SELECT *
-    FROM users
-    WHERE id = $1;
+      SELECT *
+      FROM users
+      WHERE id = $1;
     `, [id])
     .then(function(result) {
       return result.rows[0];
@@ -94,8 +88,7 @@ const getAllReservations = function(guestId, limit = 10) {
       ORDER BY reservations.start_date
       LIMIT $2;
       `, [guestId, limit])
-    .then(function (result) {
-      console.log(result.rows);
+    .then(function(result) {
       return result.rows;
     })
     .catch(function(err) {
@@ -105,7 +98,7 @@ const getAllReservations = function(guestId, limit = 10) {
 
 /// Properties
 
-// Detects position of query and adds either WHERE or AND depending
+// Detects position of queryParam, adds either WHERE or AND
 const clausToggle = function(query) {
   if (query.length === 1) {
     return 'WHERE';
@@ -123,9 +116,9 @@ const getAllProperties = function(options, limit = 10) {
   const queryParams = [];
 
   let queryString = `
-  SELECT properties.*, avg(property_reviews.rating) as average_rating
-  FROM properties
-  JOIN property_reviews ON properties.id = property_id
+    SELECT properties.*, avg(property_reviews.rating) as average_rating
+    FROM properties
+    JOIN property_reviews ON properties.id = property_id
   `;
 
   if (options.city) {
@@ -156,14 +149,19 @@ const getAllProperties = function(options, limit = 10) {
 
   queryParams.push(limit);
   queryString += `
-  GROUP BY properties.id
-  ORDER BY cost_per_night
-  LIMIT $${queryParams.length};
+    GROUP BY properties.id
+    ORDER BY cost_per_night
+    LIMIT $${queryParams.length};
   `;
 
-  console.log(queryString, queryParams);
-
-  return pool.query(queryString, queryParams).then((res) => res.rows);
+  return pool
+    .query(queryString, queryParams)
+    .then(function(res) {
+      res.rows;
+    })
+    .catch(function(err) {
+      console.log(err.message);
+    });
 };
   
 /**
@@ -173,7 +171,8 @@ const getAllProperties = function(options, limit = 10) {
  */
 const addProperty = function(property) {
   return pool
-    .query(`INSERT INTO properties (
+    .query(`
+      INSERT INTO properties (
       owner_id,
       title,
       description,
@@ -205,7 +204,13 @@ const addProperty = function(property) {
       property.parking_spaces,
       property.number_of_bathrooms,
       property.number_of_bedrooms
-    ]);
+    ])
+    .then(function(res) {
+      res.rows[0];
+    })
+    .catch(function(err) {
+      console.log(err.message);
+    });
 };
 
 module.exports = {
