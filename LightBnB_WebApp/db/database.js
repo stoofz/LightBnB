@@ -1,12 +1,4 @@
-const { Pool } = require('pg');
 const db = require('.');
-
-const pool = new Pool({
-  user: 'labber',
-  password: 'labber',
-  host: 'localhost',
-  database: 'lightbnb'
-});
 
 /// Users
 
