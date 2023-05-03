@@ -83,7 +83,7 @@ const addUser = function(user) {
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function(guest_id, limit = 10) {
-  const reservations = pool
+  return pool
     .query(`
       SELECT reservations.*, properties.*, AVG(property_reviews.rating) as average_rating
       FROM properties
@@ -101,8 +101,6 @@ const getAllReservations = function(guest_id, limit = 10) {
     .catch(function(err) {
       console.log(err.message);
     });
-  
-  return Promise.resolve(reservations);
 };
 
 /// Properties
