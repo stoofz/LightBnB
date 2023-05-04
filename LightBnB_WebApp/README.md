@@ -5,8 +5,8 @@
 ```
 .
 ├── db
-│   ├── json
-│   └── database.js
+│   ├── database.js
+│   └── index.js
 ├── public
 │   ├── javascript
 │   │   ├── components 
