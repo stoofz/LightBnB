@@ -1,5 +1,7 @@
 # LightBnB
 
+An AirBnB clone that uses server side Javascipt to display information to web pages via SQL queries.
+
 ## Project Structure
 
 ```
@@ -41,8 +43,8 @@
 ```
 
 * `db` contains all the database interaction code.
-  * `json` is a directory that contains a bunch of dummy data in `.json` files.
-  * `database.js` is responsible for all queries to the database. It doesn't currently connect to any database, all it does is return data from `.json` files.
+  * `index.js` connects to the database.
+  * `database.js` is responsible for all queries to the database.
 * `public` contains all of the HTML, CSS, and client side JavaScript. 
   * `index.html` is the entry point to the application. It's the only html page because this is a single page application.
   * `javascript` contains all of the client side javascript files.
